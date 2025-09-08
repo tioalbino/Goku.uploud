@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uploader de Imagens e Vídeos</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root {
+    --primary: #4361ee;
+    --secondary: #3a0ca3;
+    --success: #4cc9f0;
+    --danger: #f72585;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --gray: #6c757d;
+    --border-radius: 12px;
+    --box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: var(--dark);
+  }
+  
+  .container {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    width: 100%;
+    max-width: 600px;
+    padding: 30px;
+    margin: 20px 0;
+    transition: var(--transition);
+  }
+  
+  h1 {
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 20px;
+    font-weight: 700;
+  }
+  
+  .description {
+    text-align: center;
+    color: var(--gray);
+    margin-bottom: 30px;
+    line-height: 1.6;
+  }
+  
+  .upload-area {
+    border: 2px dashed #d0d7de;
+    border-radius: var(--border-radius);
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-bottom: 20px;
+    position: relative;
+  }
+  
+  .upload-area:hover, .upload-area.dragover {
+    border-color: var(--primary);
+    background-color: rgba(67, 97, 238, 0.05);
+  }
+  
+  .upload-area i {
+    font-size: 48px;
+    color: var(--primary);
+    margin-bottom: 15px;
+  }
+  
+  .upload-text {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  
+  .upload-subtext {
+    color: var(--gray);
+    font-size: 14px;
+  }
+  
+  .file-input {
+    display: none;
+  }
+  
+  .btn {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    font-weight: 600;
+  }
+  
+  .btn:hover {
+    background-color: var(--secondary);
+    transform: translateY(-2px);
+  }
+  
+  .btn:disabled {
+    background-color: var(--gray);
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .preview-container {
+    margin: 25px 0;
+    text-align: center;
+  }
+  
+  .preview-title {
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: var(--dark);
+    font-weight: 600;
+  }
+  
+  #preview {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    display: none;
+  }
+  
+  #previewVideo {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    display: none;
+  }
+  
+  .result-container {
+    margin-top: 25px;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    background-color: #f8f9fa;
+    display: none;
+  }
+  
+  .result-title {
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: var(--dark);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .result-content {
+    word-break: break-all;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    margin-top: 10px;
+  }
+  
+  .url-link {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    display: block;
+    margin-top: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .url-link:hover {
+    text-decoration: underline;
+    color: var(--secondary);
+  }
+  
+  .copy-btn {
+    background-color: var(--success);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 15px;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .copy-btn:hover {
+    opacity: 0.9;
+  }
+  
+  .progress-bar {
+    height: 6px;
+    background-color: #e9ecef;
+    border-radius: 3px;
+    margin: 15px 0;
+    overflow: hidden;
+    display: none;
+  }
+  
+  .progress {
+    height: 100%;
+    background-color: var(--primary);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  
+  .error-message {
+    color: var(--danger);
+    text-align: center;
+    margin: 15px 0;
+    padding: 10px;
+    background-color: rgba(247, 37, 133, 0.1);
+    border-radius: 8px;
+    display: none;
+  }
+  
+  .file-info {
+    background-color: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 15px 0;
+    display: none;
+  }
+  
+  .file-info p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: var(--gray);
+  }
+  
+  footer {
+    margin-top: 30px;
+    text-align: center;
+    color: var(--gray);
+    font-size: 14px;
+  }
+  
+  @media (max-width: 768px) {
+    .container {
+      padding: 20px;
+    }
+    
+    .upload-area {
+      padding: 30px 15px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Uploader de Imagens e Vídeos</h1>
+  <p class="description">Faça upload de suas imagens e vídeos para o ImgBB e obtenha um link para compartilhar</p>
+  
+  <div class="upload-area" id="uploadArea">
+    <i class="fas fa-cloud-upload-alt"></i>
+    <p class="upload-text">Arraste e solte seu arquivo aqui</p>
+    <p class="upload-subtext">ou clique para selecionar</p>
+    <input type="file" id="fileInput" class="file-input" accept="image/*,video/*" />
+  </div>
+  
+  <div class="file-info" id="fileInfo">
+    <p>Nome: <span id="fileName"></span></p>
+    <p>Tipo: <span id="fileType"></span></p>
+    <p>Tamanho: <span id="fileSize"></span></p>
+  </div>
+  
+  <div class="preview-container">
+    <p class="preview-title">Pré-visualização</p>
+    <img id="preview" />
+    <video id="previewVideo" controls></video>
+  </div>
+  
+  <button id="uploadBtn" class="btn" disabled>
+    <i class="fas fa-upload"></i> Enviar 
+  </button>
+  
+  <div class="progress-bar" id="progressBar">
+    <div class="progress" id="progress"></div>
+  </div>
+  
+  <div class="error-message" id="errorMessage"></div>
+  
+  <div class="result-container" id="resultContainer">
+    <p class="result-title"><i class="fas fa-check-circle" style="color: var(--success);"></i> Upload concluído com sucesso!</p>
+    <div class="result-content">
+      <strong>URL da imagem:</strong>
+      <a href="#" id="resultUrl" class="url-link" target="_blank"></a>
+      <button class="copy-btn" id="copyBtn">
+        <i class="fas fa-copy"></i> Copiar URL
+      </button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>Desenvolvido com ❤️ usando a API do ImgBB</p>
+</footer>
+
+<script>
+  // Elementos DOM
+  const fileInput = document.getElementById('fileInput');
+  const uploadArea = document.getElementById('uploadArea');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const resultContainer = document.getElementById('resultContainer');
+  const resultUrl = document.getElementById('resultUrl');
+  const previewImg = document.getElementById('preview');
+  const previewVideo = document.getElementById('previewVideo');
+  const progressBar = document.getElementById('progressBar');
+  const progress = document.getElementById('progress');
+  const errorMessage = document.getElementById('errorMessage');
+  const copyBtn = document.getElementById('copyBtn');
+  const fileInfo = document.getElementById('fileInfo');
+  const fileName = document.getElementById('fileName');
+  const fileType = document.getElementById('fileType');
+  const fileSize = document.getElementById('fileSize');
+
+  let selectedFile = null;
+
+  // Event Listeners
+  uploadArea.addEventListener('click', () => fileInput.click());
+  
+  uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+  });
+  
+  uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+  });
+  
+  uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    
+    if (e.dataTransfer.files.length) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  });
+  
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) {
+      handleFile(e.target.files[0]);
+    }
+  });
+  
+  uploadBtn.addEventListener('click', uploadFile);
+  
+  copyBtn.addEventListener('click', copyUrlToClipboard);
+
+  // Funções
+  function handleFile(file) {
+    selectedFile = file;
+    
+    // Exibir informações do arquivo
+    fileName.textContent = file.name;
+    fileType.textContent = file.type;
+    fileSize.textContent = formatFileSize(file.size);
+    fileInfo.style.display = 'block';
+    
+    // Limpar prévias anteriores
+    previewImg.style.display = 'none';
+    previewVideo.style.display = 'none';
+    resultContainer.style.display = 'none';
+    errorMessage.style.display = 'none';
+    
+    // Habilitar botão de upload
+    uploadBtn.disabled = false;
+    
+    // Exibir prévia
+    if (file.type.startsWith('image/')) {
+      previewImg.src = URL.createObjectURL(file);
+      previewImg.style.display = 'block';
+    } else if (file.type.startsWith('video/')) {
+      previewVideo.src = URL.createObjectURL(file);
+      previewVideo.style.display = 'block';
+    }
+  }
+  
+  function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+  
+  async function uploadFile() {
+    if (!selectedFile) {
+      showError('Selecione um arquivo primeiro!');
+      return;
+    }
+    
+    // Verificar tamanho do arquivo (limite de 32MB para a API free)
+    if (selectedFile.size > 32 * 1024 * 1024) {
+      showError('O arquivo é muito grande. O tamanho máximo é 32MB.');
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append('image', selectedFile);
+    formData.append('key', 'bda2385ac0e91d06354fbe7487349fe6'); // API key do imgbb
+
+    // Preparar interface para upload
+    uploadBtn.disabled = true;
+    progressBar.style.display = 'block';
+    progress.style.width = '0%';
+    resultContainer.style.display = 'none';
+    errorMessage.style.display = 'none';
+    
+    try {
+      const response = await fetch('https://api.imgbb.com/1/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      // Simular progresso (a API não fornece progresso real)
+      simulateUploadProgress();
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showSuccess(data.data.url);
+      } else {
+        throw new Error(data.error?.message || 'Falha no upload');
+      }
+    } catch (err) {
+      showError('Erro no upload: ' + err.message);
+    } finally {
+      progressBar.style.display = 'none';
+    }
+  }
+  
+  function simulateUploadProgress() {
+    let width = 0;
+    const interval = setInterval(() => {
+      if (width >= 100) {
+        clearInterval(interval);
+      } else {
+        width += 5;
+        progress.style.width = width + '%';
+      }
+    }, 100);
+  }
+  
+  function showSuccess(url) {
+    resultUrl.href = url;
+    resultUrl.textContent = url;
+    resultContainer.style.display = 'block';
+    uploadBtn.disabled = false;
+  }
+  
+  function showError(message) {
+    errorMessage.textContent = message;
+    errorMessage.style.display = 'block';
+    uploadBtn.disabled = false;
+  }
+  
+  async function copyUrlToClipboard() {
+    try {
+      await navigator.clipboard.writeText(resultUrl.href);
+      copyBtn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+      setTimeout(() => {
+        copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copiar URL';
+      }, 2000);
+    } catch (err) {
+      console.error('Falha ao copiar: ', err);
+    }
+  }
+</script>
+</body>
+</html>
